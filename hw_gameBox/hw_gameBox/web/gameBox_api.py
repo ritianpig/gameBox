@@ -96,7 +96,9 @@ def take_openid():
                 results_dict['gold_numbers'] = res_user.gold_numbers
 
                 # 根据用户openid 查询用户所有奖品id　添加到aw_list中
-                res_award_records = db.session.query(Award_record).filter_by(user_id=openId).all()
+                # 取用户获取奖品的最新10条
+                res_award_records = db.session.query(Award_record).filter_by(user_id=openId).order_by(
+                    Award_record.id.desc()).limit(10).all()
                 aw_list = []
 
                 for res_award_record in res_award_records:
@@ -107,7 +109,9 @@ def take_openid():
                 for k in aw_list:
                     if k:
                         res_aw = db.session.query(Awards).filter_by(awardId=k).first()
-                        res_aw_re = db.session.query(Award_record).filter_by(award_id=k).first()
+                        # 把奖品最新时间更新，而不是同一种奖品，之前的获奖时间
+                        res_aw_re = db.session.query(Award_record).filter_by(award_id=k).order_by(
+                            Award_record.id.desc()).first()
                         dict_a = {
                             'awardtitle':res_aw.awardTitle,
                             'awardtime':res_aw_re.award_time
@@ -289,7 +293,6 @@ def getAwards():
         awasId = db.session.query(Awards).all()
         for awaId in awasId:
             award_id_list.append(awaId.awardId)
-            print(type(awaId.awardId))
 
         # 判断输入的奖品id是否在奖品表中，如果在就继续执行，如果不在则返回提示信息
         if get_id in award_id_list:
@@ -301,7 +304,8 @@ def getAwards():
 
             # 通过获奖记录表查询用户获奖记录
             # 先查询每个openid　对应多少个award_id记录
-            user_awards = db.session.query(Award_record).filter_by(user_id=get_openid).all()
+            user_awards = db.session.query(Award_record).filter_by(user_id=get_openid).order_by(
+                Award_record.id.desc()).limit(10).all()
 
             # 取出获奖记录表中的所有award_id 添加到awards_list
             awards_list = []
@@ -312,7 +316,7 @@ def getAwards():
             for aw_id in awards_list:
                 # 因为奖品id是根据用户id　来获取，所以一个用户有多少奖品id，对应的就有多少个奖品标题，和获奖时间，first()就可以了
                 a = db.session.query(Awards).filter_by(awardId=aw_id).first()
-                b = db.session.query(Award_record).filter_by(award_id=aw_id).first()
+                b = db.session.query(Award_record).filter_by(award_id=aw_id).order_by(Award_record.id.desc()).first()
 
                 # 构造字典存储奖品标题和获奖时间
                 dict_a = {
