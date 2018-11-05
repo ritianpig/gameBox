@@ -157,7 +157,7 @@ def mall():
            
         return jsonify(results_dict)
     else:
-        return None
+        return '不支持的请求方式'
 
 # 分享游戏信息和精品礼包
 @web.route('/gamemsg',methods=['GET','POST'])
@@ -193,47 +193,7 @@ def shareGame():
 
         return jsonify(results_dict)
     else:
-        return None
-
-
-# 获取小程序信息并且统计点击数
-# @web.route('/getProgram',methods=["GET","POST"])
-# def clickNumbers():
-#     if request.method == "GET":
-#         # results_dict = {}
-#         title_if = []
-#         get_appid = request.args.get('appid')
-#
-#         res_gram = db.session.query(Program_messages).filter_by(appid=get_appid).first()
-#         # 去除appid 对应的点击数，进行请求＋１操作
-#         res_gram.click_numbers += 1
-#
-#         # 取出appid　对应的数据，如果数据为空则说明该程序不在点击统计范围内则将其对应的数据加载到数据表，如果不为空，则更新点击数
-#         res_clicks = db.session.query(ClickNubmer).filter_by(appid=get_appid).first()
-#
-#         if res_clicks is None:
-#             clicks = ClickNubmer(appid=res_gram.appid,title=res_gram.title, ClickNumbers=res_gram.click_numbers)
-#             db.session.add(clicks)
-#             db.session.commit()
-#
-#         else:
-#             res_clicks.ClickNumbers = res_gram.click_numbers
-#             db.session.commit()
-#
-#         return 'ok'
-#     else:
-#         return None
-#
-# @web.route('/click',methods=['GET','POST'])
-# def click():
-#     if request.method == "GET":
-#
-#         res_datas = db.session.query(ClickNubmer).all()
-#         return render_template('c.html',ClickDict = res_datas)
-#
-#     else:
-#         return '错误的请求方法'
-
+        return '不支持的请求方式'
 
 # 计算金币信息
 @web.route('/gold',methods=["GET","POST"])
