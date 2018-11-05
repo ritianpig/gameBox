@@ -1,0 +1,74 @@
+table {
+    position: absolute;
+    left: 0px;
+    top: 20%;
+    border-collapse:collapse;
+    /*border:1px solid #aaa;*/
+    width:100%;
+    }
+
+table th {
+    vertical-align:baseline;
+    padding:5px 15px 5px 6px;
+    background-color:#66FFCC;
+    /*border:1px solid #3F3F3F;*/
+    text-align:center;
+    color:#fff;
+    }
+
+table td {
+    /*vertical-align:text-top;*/
+    text-align:center;
+    padding:6px 15px 6px 6px;
+    border:1px solid #DDDDDD;
+    }
+
+table tr:nth-child(odd) {
+    background-color:#CCFFFF;
+}
+
+table tr:nth-child(even) {
+    background-color:#fff;
+}
+
+.input1 {
+    border-style: double;
+    border-color: #66CCFF;
+    border-width: 2px;
+    border-radius: 6px;
+    position: absolute; 
+    left: 0px;
+    top: 0px; 
+    width: 37.5%;
+    height: 100%;
+}
+.input2 {
+    border-style: double;
+    border-color: #66CCFF;
+    border-width: 2px;
+    border-radius: 6px;
+    position: absolute; 
+    left: 44.5%;
+    top: 0px;
+    width: 37.5%;
+    height: 100%;
+}
+
+.login-button { 
+    position: absolute;
+    top: 0px;
+    width: 15%; 
+    height: 116%; 
+    border-width: 0px; 
+    border-radius: 6px; 
+    right: 0px;
+    background: #1E90FF; 
+    cursor: pointer; 
+    outline: none; 
+    font-family: Microsoft YaHei; 
+    color: white; 
+    font-size: 17px; 
+}
+.login-button:hover { 
+    background: #5599FF;
+｝

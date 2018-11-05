@@ -1,15 +1,21 @@
 from . import web
-from flask import request,jsonify,render_template
-from models import db,Program_messages,User_messages,Gift,Awards,Share,ClickNubmer,ChannelTongji,Sharecontent,Award_record
+from flask import request, jsonify, render_template, redirect, url_for, g
+from models import db,Program_messages,User_messages,Gift,Awards,Share,ClickNubmer,\
+                    ChannelTongji,Sharecontent,Award_record
 from urllib import request as req
 import json
 from datetime import datetime
+from fuction.WXBizDataCrypt import WXBizDataCrypt
+from forms import ClickForm
 
 
 # 获取微信小程序总表信息
 @web.route('/program',methods=["POST","GET"])
 def proMessage():
     if request.method == "GET":
+        get_appid = request.args.get('appid')
+        get_channel = request.args.get('channel')
+        get_position = request.args.get('position')
 
         results_list = []
         results_dict = {}
@@ -83,17 +89,23 @@ def take_openid():
 
         if 'openid'  in keys_list:
             openId = resp2['openid']
+            sessionKey = resp2['session_key']
             res_user = db.session.query(User_messages).filter_by(openId=openId).first()
 
+            # 判断用户是否为新用户，如果是信息用户，则添加用户信息，并且将返回用户状态码
             if res_user is None:
                 creat_user = User_messages(openId=openId)
                 db.session.add(creat_user)
                 db.session.commit()
                 results_dict['openid'] = openId
+                results_dict['sessionKey'] = sessionKey
+                results_dict['isexist'] = 0
 
             else:
                 results_dict['openid'] = openId
                 results_dict['gold_numbers'] = res_user.gold_numbers
+                results_dict['isexist'] = 1
+                results_dict['sessionKey'] = sessionKey
 
                 # 根据用户openid 查询用户所有奖品id　添加到aw_list中
                 # 取用户获取奖品的最新10条
@@ -185,42 +197,42 @@ def shareGame():
 
 
 # 获取小程序信息并且统计点击数
-@web.route('/getProgram',methods=["GET","POST"])
-def clickNumbers():
-    if request.method == "GET":
-        # results_dict = {}
-        title_if = []
-        get_appid = request.args.get('appid')
-
-        res_gram = db.session.query(Program_messages).filter_by(appid=get_appid).first()
-        # 去除appid 对应的点击数，进行请求＋１操作
-        res_gram.click_numbers += 1
-
-        # 取出appid　对应的数据，如果数据为空则说明该程序不在点击统计范围内则将其对应的数据加载到数据表，如果不为空，则更新点击数
-        res_clicks = db.session.query(ClickNubmer).filter_by(appid=get_appid).first()
-
-        if res_clicks is None:
-            clicks = ClickNubmer(appid=res_gram.appid,title=res_gram.title, ClickNumbers=res_gram.click_numbers)
-            db.session.add(clicks)
-            db.session.commit()
-
-        else:
-            res_clicks.ClickNumbers = res_gram.click_numbers
-            db.session.commit()
-
-        return 'ok'
-    else:
-        return None
-
-@web.route('/click',methods=['GET','POST'])
-def click():
-    if request.method == "GET":
-
-        res_datas = db.session.query(ClickNubmer).all()
-        return render_template('clicks.html',ClickDict = res_datas)
-
-    else:
-        return '错误的请求方法'
+# @web.route('/getProgram',methods=["GET","POST"])
+# def clickNumbers():
+#     if request.method == "GET":
+#         # results_dict = {}
+#         title_if = []
+#         get_appid = request.args.get('appid')
+#
+#         res_gram = db.session.query(Program_messages).filter_by(appid=get_appid).first()
+#         # 去除appid 对应的点击数，进行请求＋１操作
+#         res_gram.click_numbers += 1
+#
+#         # 取出appid　对应的数据，如果数据为空则说明该程序不在点击统计范围内则将其对应的数据加载到数据表，如果不为空，则更新点击数
+#         res_clicks = db.session.query(ClickNubmer).filter_by(appid=get_appid).first()
+#
+#         if res_clicks is None:
+#             clicks = ClickNubmer(appid=res_gram.appid,title=res_gram.title, ClickNumbers=res_gram.click_numbers)
+#             db.session.add(clicks)
+#             db.session.commit()
+#
+#         else:
+#             res_clicks.ClickNumbers = res_gram.click_numbers
+#             db.session.commit()
+#
+#         return 'ok'
+#     else:
+#         return None
+#
+# @web.route('/click',methods=['GET','POST'])
+# def click():
+#     if request.method == "GET":
+#
+#         res_datas = db.session.query(ClickNubmer).all()
+#         return render_template('c.html',ClickDict = res_datas)
+#
+#     else:
+#         return '错误的请求方法'
 
 
 # 计算金币信息
@@ -259,32 +271,11 @@ def operationGold():
     else:
         return "不支持POST请求"
 
-@web.route('/test')
-def test():
-    if request.method == "GET":
-        print('a')
-        test_dic = {}
-        get_openid = request.args.get("openid")
-        res_us = db.session.query(User_messages).filter_by(openId=get_openid).first()
-        print(res_us.awards)
-        user_award_dict = {}
-        user_award_list = []
-        for x in res_us.awards:
-            a_dict = x.to_json()
-            del a_dict['id']
-            user_award_list.append(a_dict)
-            user_award_dict['user'] = user_award_list
-        return jsonify(user_award_dict)
-
-    else:
-        return "notok"
-
 @web.route('/keepAwards',methods=["GET","POST"])
 def getAwards():
     results_list = []
     if request.method == "GET":
         get_id = request.args.get('awardid',type=int)
-        print(type(get_id))
         get_openid = request.args.get('openid')
 
         # 将记录存入获奖记录表
@@ -331,3 +322,122 @@ def getAwards():
 
     else:
         return "不支持的访问方法"
+
+@web.route('/getOpenGid',methods=["GET","POST"])
+def getOpenGid():
+    if request.method == "GET":
+        appId = request.args.get('appId',default=str)
+        sessionKey = request.args.get('sessionKey',default=str)
+        encryptedData = request.args.get('encryptedData',default=str)
+        iv = request.args.get('iv')
+
+        pc = WXBizDataCrypt(appId, sessionKey)
+        resPc = pc.decrypt(encryptedData, iv)
+
+        return jsonify(resPc)
+
+    elif request.method == "POST":
+        appId = request.args.get('appId',default=str)
+        sessionKey = request.args.get('sessionKey',default=str)
+        encryptedData = request.args.get('encryptedData',default=str)
+        iv = request.args.get('iv')
+        print(appId)
+
+        pc = WXBizDataCrypt(appId, sessionKey)
+        resPc = pc.decrypt(encryptedData, iv)
+
+        return jsonify(resPc)
+
+
+@web.route('/saveClick',methods=["GET","POST"])
+def click():
+    if request.method == "GET":
+        get_name = request.args.get('name')
+        get_channel = request.args.get('channel')
+
+        res_clicknumbers = db.session.query(ClickNubmer).filter_by(name=get_name).all()
+
+        # 取出表中所有的channel值组成列表
+        chanel_list = []
+        for res_clicknumber in res_clicknumbers:
+            chanel_list.append(res_clicknumber.channel)
+
+        # 首先判断取到的值，是否在数据库列表中，如果没有的情况下，那么传入的数据就是新数据，那么就应该将这一组数据存入数据库
+        if len(res_clicknumbers) == 0:
+            # 找出数据库sortId的最大值，对该值+1赋值给新的数据
+            res_sortId_max = db.session.query(ClickNubmer).order_by(ClickNubmer.sortId.desc()).first().sortId
+            # 排序仅针对数据库特定的那几组数据排序，所以sortId 不用赋值
+            save_click = ClickNubmer(sortId=res_sortId_max+1,name=get_name,channel=get_channel,clicks=1,cha_clicks=1)
+            db.session.add(save_click)
+
+            db.session.commit()
+
+        # 如果res_clicknumber 不为None 说明数据库中存在name=get_name的值，那么需要将所有name值取出，对ClickNumber做加1操作
+        # 同时这还分为两种情况，如果channel存在为一种情况，channel不存在又是一种情况，将这两种情况区分开的话，那么到时候统计点击数
+        # 的时候可以将name和channel分开统计
+
+        # 如果name存在并且channel存在
+        elif get_channel in chanel_list:
+            res_channel = db.session.query(ClickNubmer).filter_by(name=get_name,channel=get_channel).first()
+            # 对这条记录的clickNumbers　进行加１操作
+            res_channel.cha_clicks +=1
+            db.session.commit()
+
+            # 查询出数据库中所有name=?的值，取出clicks最大的值，然后进行加１,再然后将数据库中所有的name=?的clicks　都换成最大值
+            res_max = db.session.query(ClickNubmer).order_by(ClickNubmer.clicks.desc())\
+                .filter_by(name=get_name).first().clicks
+            save_max = res_max + 1
+
+            # 取出数据库中所有name 为get_name的数据，然后将该数据中的clicks进行赋值，赋值后的所有clicks将会同步
+            res_clicks = db.session.query(ClickNubmer).filter_by(name=get_name).all()
+            for res_click in res_clicks:
+                res_click.clicks = save_max
+            db.session.commit()
+
+
+        # 如果name存在并且channel不存在，那么就要创造这条记录，clickNumbers赋值为１
+        elif get_channel not in chanel_list:
+            res_channel = db.session.query(ClickNubmer).filter_by(name=get_name).first()
+            save_click = ClickNubmer(name=get_name,channel=get_channel,cha_clicks=1,sortId=res_channel.sortId)
+            db.session.add(save_click)
+            db.session.commit()
+            res_max = db.session.query(ClickNubmer).order_by(ClickNubmer.clicks.desc()) \
+                .filter_by(name=get_name).first().clicks
+            save_max = res_max + 1
+            res_clicks = db.session.query(ClickNubmer).filter_by(name=get_name).all()
+            for res_click in res_clicks:
+                res_click.clicks = save_max
+            db.session.commit()
+
+
+        return '保存成功'
+
+    else:
+        return '不支持的请求方法'
+
+
+@web.route('/click',methods=["GET","POST"])
+def getclick():
+
+    form = ClickForm()
+    if form.validate_on_submit():
+        name = form.name.data
+        channel = form.channel.data
+
+        if name == 'all' and channel == 'all':
+            res_all = db.session.query(ClickNubmer).all()
+
+        # return redirect(url_for('web.findClick'))
+            return render_template('allclicks.html',ClickDict = res_all)
+
+        else:
+            res_find = db.session.query(ClickNubmer).filter_by(name=name,channel=channel).all()
+            return render_template('allclicks.html',ClickDict = res_find)
+    # 为实现固定数量显示，首先对sortId进行升序排列，然后筛选前n条数据
+    res_datas = db.session.query(ClickNubmer).order_by(ClickNubmer.sortId.asc()).filter(ClickNubmer.sortId<=10).all()
+    return render_template('click.html',form=form,ClickDict = res_datas)
+
+
+
+
+

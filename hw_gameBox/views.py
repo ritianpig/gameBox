@@ -20,6 +20,7 @@ admin.add_view(ModelView(Gift,db.session,name='精品礼包'))
 admin.add_view(ModelView(Share,db.session,name='游戏分享'))
 admin.add_view(ModelView(Sharecontent,db.session,name='盒子分享库'))
 admin.add_view(ModelView(ChannelTongji,db.session,name='统计渠道'))
+admin.add_view(ModelView(ClickNubmer,db.session,name='test_click'))
 # admin.add_view(click_num(ClickNubmer,db.session,name='统计点击数'))
 
 # 只读表单模式

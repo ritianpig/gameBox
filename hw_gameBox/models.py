@@ -1,5 +1,4 @@
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
 from flask_migrate import Migrate
 
 db = SQLAlchemy()
@@ -88,10 +87,13 @@ class Gift(db.Model):
         return dict
 
 class ClickNubmer(db.Model):
+    __tablename__ = 'clicknumber'
     id = db.Column(db.Integer,primary_key=True)
-    appid = db.Column(db.String(150))
-    title = db.Column(db.String(100))
-    ClickNumbers = db.Column(db.Integer,default=0)
+    sortId = db.Column(db.Integer)
+    name = db.Column(db.String(200))
+    channel = db.Column(db.String(200))
+    cha_clicks = db.Column(db.Integer,default=0)
+    clicks = db.Column(db.Integer,default=0)
 
 class Sharecontent(db.Model):
     id = db.Column(db.Integer,primary_key=True)
