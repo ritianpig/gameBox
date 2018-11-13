@@ -286,9 +286,9 @@ def getAwards():
 @web.route('/getOpenGid',methods=["GET","POST"])
 def getOpenGid():
     if request.method == "GET":
-        appId = request.args.get('appId',default=str)
-        sessionKey = request.args.get('sessionKey',default=str)
-        encryptedData = request.args.get('encryptedData',default=str)
+        appId = request.args.get('appId',type=str)
+        sessionKey = request.args.get('sessionKey',type=str)
+        encryptedData = request.args.get('encryptedData',type=str)
         iv = request.args.get('iv')
 
         pc = WXBizDataCrypt(appId, sessionKey)
@@ -297,9 +297,9 @@ def getOpenGid():
         return jsonify(resPc)
 
     elif request.method == "POST":
-        appId = request.args.get('appId',default=str)
-        sessionKey = request.args.get('sessionKey',default=str)
-        encryptedData = request.args.get('encryptedData',default=str)
+        appId = request.args.get('appId',type=str)
+        sessionKey = request.args.get('sessionKey',type=str)
+        encryptedData = request.args.get('encryptedData',type=str)
         iv = request.args.get('iv')
         print(appId)
 
