@@ -93,7 +93,7 @@ def take_openid():
             res_user = db.session.query(User_messages).filter_by(openId=openId).first()
 
             # 判断用户是否为新用户，如果是信息用户，则添加用户信息，并且将返回用户状态码
-            if res_user is None:
+            if not res_user:
                 creat_user = User_messages(openId=openId)
                 db.session.add(creat_user)
                 db.session.commit()
